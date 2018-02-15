@@ -39,16 +39,22 @@ impl DrawState {
         self.fill = Some(color);
         self
     }
-    pub fn trans(mut self, x: f64, y: f64) -> Self {
+    pub fn translate(mut self, x: f64, y: f64) -> Self {
         use graphics::Transformed;
         self.transform = self.transform.trans(x, y);
+        self
+    }
+    pub fn rotate(mut self, angle: f64) -> Self {
+        use graphics::Transformed;
+        self.transform = self.transform.rot_rad(angle);
         self
     }
 }
 
 pub struct Context {
     args: piston::input::RenderArgs,
-    ctx: graphics::context::Context
+    ctx: graphics::context::Context,
+    pub dt: f64
 }
 
 impl Context {
@@ -65,24 +71,27 @@ impl Context {
 
 pub struct WindowBuilder {
     settings: piston::window::WindowSettings,
-    draw: Option<Box<Fn(Graphics, Context) -> ()>>
+    draw: Option<Box<FnMut(Graphics, Context) -> ()>>
 }
 
 const OPENGL_VERSION: opengl_graphics::OpenGL = opengl_graphics::OpenGL::V2_1;
 
 impl WindowBuilder {
-    pub fn run(&self) {
+    pub fn run(mut self) {
         let mut window: Window = self.settings.build().unwrap();
         let mut gl = opengl_graphics::GlGraphics::new(OPENGL_VERSION);
         let mut events = piston::event_loop::Events::new(piston::event_loop::EventSettings::new());
+        let mut render_dt = 0.0;
         while let Some(e) = events.next(&mut window) {
             if let Some(r) = e.render_args() {
-                if let Some(ref draw) = self.draw {
+                if let Some(ref mut draw) = self.draw {
                     gl.draw(r.viewport(), |c, glo| {
                         let ctx = Context {
                             args: r,
-                            ctx: c
+                            ctx: c,
+                            dt: render_dt
                         };
+                        render_dt = 0.0;
                         let graphics = Graphics {
                             gl: glo
                         };
@@ -91,10 +100,11 @@ impl WindowBuilder {
                 }
             }
             if let Some(u) = e.update_args() {
+                render_dt += u.dt;
             }
         }
     }
-    pub fn draw<F: 'static + Fn(Graphics, Context) -> ()>
+    pub fn draw<F: 'static + FnMut(Graphics, Context) -> ()>
         (mut self, draw: F) -> Self {
         self.draw = Some(Box::new(draw));
         self

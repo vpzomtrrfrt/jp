@@ -5,7 +5,7 @@ fn main() {
         .draw(|mut g, c| {
             g.rectangle(
                 c.state()
-                .trans(c.width() / 2.0, c.height() / 2.0)
+                .translate(c.width() / 2.0, c.height() / 2.0)
                 .fill([1.0, 0.0, 0.0, 1.0]),
                 50.0, 50.0);
         })
