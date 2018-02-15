@@ -4,8 +4,7 @@ extern crate piston;
 extern crate glutin_window;
 
 use glutin_window::GlutinWindow as Window;
-use piston::input::UpdateEvent;
-use piston::input::RenderEvent;
+use piston::input::{UpdateEvent, RenderEvent, MouseCursorEvent};
 
 pub type Color = graphics::types::Color;
 
@@ -74,7 +73,9 @@ impl DrawState {
 pub struct Context {
     args: piston::input::RenderArgs,
     ctx: graphics::context::Context,
-    pub dt: f64
+    pub dt: f64,
+    pub mouse_x: f64,
+    pub mouse_y: f64
 }
 
 impl Context {
@@ -102,6 +103,8 @@ impl WindowBuilder {
         let mut gl = opengl_graphics::GlGraphics::new(OPENGL_VERSION);
         let mut events = piston::event_loop::Events::new(piston::event_loop::EventSettings::new());
         let mut render_dt = 0.0;
+        let mut mouse_x = 0.0;
+        let mut mouse_y = 0.0;
         while let Some(e) = events.next(&mut window) {
             if let Some(r) = e.render_args() {
                 if let Some(ref mut draw) = self.draw {
@@ -109,7 +112,9 @@ impl WindowBuilder {
                         let ctx = Context {
                             args: r,
                             ctx: c,
-                            dt: render_dt
+                            dt: render_dt,
+                            mouse_x,
+                            mouse_y
                         };
                         render_dt = 0.0;
                         let graphics = Graphics {
@@ -121,6 +126,10 @@ impl WindowBuilder {
             }
             if let Some(u) = e.update_args() {
                 render_dt += u.dt;
+            }
+            if let Some(m) = e.mouse_cursor_args() {
+                mouse_x = m[0];
+                mouse_y = m[1];
             }
         }
     }
