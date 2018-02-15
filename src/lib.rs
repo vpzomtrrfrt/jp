@@ -27,9 +27,40 @@ pub struct DrawState {
     stroke: Option<Color>
 }
 
+impl DrawState {
+    fn new(transform: graphics::math::Matrix2d) -> Self {
+        DrawState {
+            transform,
+            fill: None,
+            stroke: None
+        }
+    }
+    pub fn fill(mut self, color: Color) -> Self {
+        self.fill = Some(color);
+        self
+    }
+    pub fn trans(mut self, x: f64, y: f64) -> Self {
+        use graphics::Transformed;
+        self.transform = self.transform.trans(x, y);
+        self
+    }
+}
+
 pub struct Context {
     args: piston::input::RenderArgs,
     ctx: graphics::context::Context
+}
+
+impl Context {
+    pub fn width(&self) -> f64 {
+        self.args.width.into()
+    }
+    pub fn height(&self) -> f64 {
+        self.args.height.into()
+    }
+    pub fn state(&self) -> DrawState {
+        DrawState::new(self.ctx.transform)
+    }
 }
 
 pub struct WindowBuilder {
@@ -42,12 +73,10 @@ const OPENGL_VERSION: opengl_graphics::OpenGL = opengl_graphics::OpenGL::V2_1;
 impl WindowBuilder {
     pub fn run(&self) {
         let mut window: Window = self.settings.build().unwrap();
-        println!("got window");
         let mut gl = opengl_graphics::GlGraphics::new(OPENGL_VERSION);
         let mut events = piston::event_loop::Events::new(piston::event_loop::EventSettings::new());
         while let Some(e) = events.next(&mut window) {
             if let Some(r) = e.render_args() {
-                println!("{:?}", r);
                 if let Some(ref draw) = self.draw {
                     gl.draw(r.viewport(), |c, glo| {
                         let ctx = Context {
@@ -64,6 +93,11 @@ impl WindowBuilder {
             if let Some(u) = e.update_args() {
             }
         }
+    }
+    pub fn draw<F: 'static + Fn(Graphics, Context) -> ()>
+        (mut self, draw: F) -> Self {
+        self.draw = Some(Box::new(draw));
+        self
     }
 }
 
