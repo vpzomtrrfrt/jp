@@ -13,18 +13,33 @@ pub struct Graphics<'a> {
     gl: &'a mut opengl_graphics::GlGraphics
 }
 
+const INVISIBLE: Color = [0.0; 4];
+
 impl<'a> Graphics<'a> {
     pub fn rectangle(&mut self, state: DrawState, width: f64, height: f64) {
-        if let Some(fill) = state.fill {
-            graphics::rectangle(fill, [0.0, 0.0, width, height], state.transform, self.gl);
+        if state.fill.is_none() && state.stroke.is_none() {
+            return; // nothing to draw
         }
+        let coords = [0.0, 0.0, width, height];
+        let rect = graphics::rectangle::Rectangle {
+            color: state.fill.unwrap_or(INVISIBLE),
+            shape: graphics::rectangle::Shape::Square,
+            border: state.stroke.and_then(|color| {
+                Some(graphics::rectangle::Border {
+                    color,
+                    radius: state.stroke_width
+                })
+            })
+        };
+        rect.draw(coords, &Default::default(), state.transform, self.gl);
     }
 }
 
 pub struct DrawState {
     transform: graphics::math::Matrix2d,
     fill: Option<Color>,
-    stroke: Option<Color>
+    stroke: Option<Color>,
+    stroke_width: f64
 }
 
 impl DrawState {
@@ -32,11 +47,16 @@ impl DrawState {
         DrawState {
             transform,
             fill: None,
-            stroke: None
+            stroke: None,
+            stroke_width: 1.0
         }
     }
     pub fn fill(mut self, color: Color) -> Self {
         self.fill = Some(color);
+        self
+    }
+    pub fn stroke(mut self, color: Color) -> Self {
+        self.stroke = Some(color);
         self
     }
     pub fn translate(mut self, x: f64, y: f64) -> Self {

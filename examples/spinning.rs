@@ -17,9 +17,10 @@ fn main() {
                 .translate(c.width() / 2.0, c.height() / 2.0)
                 .rotate(angle)
                 .translate(-RADIUS, -RADIUS)
-                .fill([1.0, 0.0, 0.0, 1.0]),
+                .fill([1.0, 0.0, 0.0, 1.0])
+                .stroke([0.0, 1.0, 0.0, 1.0]),
                 RADIUS * 2.0, RADIUS * 2.0);
-            angle += c.dt * 5.0;
+            angle += c.dt * 3.0;
         })
         .run();
 }
