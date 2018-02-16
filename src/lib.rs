@@ -79,14 +79,14 @@ impl DrawState {
         self.stroke = Some(color);
         self
     }
-    pub fn translate(mut self, x: f64, y: f64) -> Self {
+    pub fn translate<X: Into<f64>, Y: Into<f64>>(mut self, x: X, y: Y) -> Self {
         use graphics::Transformed;
-        self.transform = self.transform.trans(x, y);
+        self.transform = self.transform.trans(x.into(), y.into());
         self
     }
-    pub fn rotate(mut self, angle: f64) -> Self {
+    pub fn rotate<A: Into<f64>>(mut self, angle: A) -> Self {
         use graphics::Transformed;
-        self.transform = self.transform.rot_rad(angle);
+        self.transform = self.transform.rot_rad(angle.into());
         self
     }
 }
