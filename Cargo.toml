@@ -1,6 +1,6 @@
 [package]
 name = "jp"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Colin Reeder <vpzomtrrfrt@gmail.com>"]
 description = "An attempt at a friendly graphics API"
 license = "MIT"
