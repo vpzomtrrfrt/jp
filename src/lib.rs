@@ -17,8 +17,11 @@ pub struct Graphics<'a> {
 const INVISIBLE: Color = [0.0; 4];
 
 impl<'a> Graphics<'a> {
-    pub fn rectangle(&mut self, state: DrawState, width: f64, height: f64) {
-        let coords = [0.0, 0.0, width, height];
+    pub fn rectangle<W: Into<f64>, H: Into<f64>>(&mut self,
+                                                 state: DrawState,
+                                                 width: W,
+                                                 height: H) {
+        let coords = [0.0, 0.0, width.into(), height.into()];
         let rect = graphics::rectangle::Rectangle {
             color: state.fill.unwrap_or(INVISIBLE),
             shape: graphics::rectangle::Shape::Square,
@@ -31,8 +34,11 @@ impl<'a> Graphics<'a> {
         };
         rect.draw(coords, &Default::default(), state.transform, self.gl);
     }
-    pub fn ellipse(&mut self, state: DrawState, width: f64, height: f64) {
-        let coords = [0.0, 0.0, width, height];
+    pub fn ellipse<W: Into<f64>, H: Into<f64>>(&mut self,
+                                               state: DrawState,
+                                               width: W,
+                                               height: H) {
+        let coords = [0.0, 0.0, width.into(), height.into()];
         let shape = graphics::ellipse::Ellipse {
             color: state.fill.unwrap_or(INVISIBLE),
             border: state.stroke.and_then(|color| {
@@ -162,9 +168,9 @@ impl WindowBuilder {
     }
     pub fn draw<F: 'static + FnMut(Graphics, Context) -> ()>
         (mut self, draw: F) -> Self {
-        self.draw = Some(Box::new(draw));
-        self
-    }
+            self.draw = Some(Box::new(draw));
+            self
+        }
 }
 
 pub fn create_window(title: &str, width: u32, height: u32) -> WindowBuilder {
@@ -173,6 +179,6 @@ pub fn create_window(title: &str, width: u32, height: u32) -> WindowBuilder {
                       title, [width, height])
             .opengl(OPENGL_VERSION)
             .srgb(false),
-        draw: None
+            draw: None
     }
 }
