@@ -3,8 +3,10 @@ extern crate opengl_graphics;
 extern crate piston;
 extern crate glutin_window;
 
+pub mod input;
+
 use glutin_window::GlutinWindow as Window;
-use piston::input::{UpdateEvent, RenderEvent, MouseCursorEvent};
+use piston::input::{UpdateEvent, RenderEvent, MouseCursorEvent, PressEvent, ReleaseEvent};
 
 pub type Color = graphics::types::Color;
 
@@ -70,15 +72,16 @@ impl DrawState {
     }
 }
 
-pub struct Context {
+pub struct Context<'a> {
     args: piston::input::RenderArgs,
     ctx: graphics::context::Context,
+    buttons: &'a std::collections::HashSet<input::Button>,
     pub dt: f64,
     pub mouse_x: f64,
     pub mouse_y: f64
 }
 
-impl Context {
+impl<'a> Context<'a> {
     pub fn width(&self) -> f64 {
         self.args.width.into()
     }
@@ -87,6 +90,9 @@ impl Context {
     }
     pub fn state(&self) -> DrawState {
         DrawState::new(self.ctx.transform)
+    }
+    pub fn is_pressed(&self, button: input::Button) -> bool {
+        self.buttons.contains(&button)
     }
 }
 
@@ -105,6 +111,7 @@ impl WindowBuilder {
         let mut render_dt = 0.0;
         let mut mouse_x = 0.0;
         let mut mouse_y = 0.0;
+        let mut buttons = std::collections::HashSet::new();
         while let Some(e) = events.next(&mut window) {
             if let Some(r) = e.render_args() {
                 if let Some(ref mut draw) = self.draw {
@@ -114,7 +121,8 @@ impl WindowBuilder {
                             ctx: c,
                             dt: render_dt,
                             mouse_x,
-                            mouse_y
+                            mouse_y,
+                            buttons: &buttons
                         };
                         render_dt = 0.0;
                         let graphics = Graphics {
@@ -130,6 +138,12 @@ impl WindowBuilder {
             if let Some(m) = e.mouse_cursor_args() {
                 mouse_x = m[0];
                 mouse_y = m[1];
+            }
+            if let Some(b) = e.press_args() {
+                buttons.insert(b);
+            }
+            if let Some(b) = e.release_args() {
+                buttons.remove(&b);
             }
         }
     }
