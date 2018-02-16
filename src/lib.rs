@@ -18,9 +18,6 @@ const INVISIBLE: Color = [0.0; 4];
 
 impl<'a> Graphics<'a> {
     pub fn rectangle(&mut self, state: DrawState, width: f64, height: f64) {
-        if state.fill.is_none() && state.stroke.is_none() {
-            return; // nothing to draw
-        }
         let coords = [0.0, 0.0, width, height];
         let rect = graphics::rectangle::Rectangle {
             color: state.fill.unwrap_or(INVISIBLE),
@@ -34,13 +31,28 @@ impl<'a> Graphics<'a> {
         };
         rect.draw(coords, &Default::default(), state.transform, self.gl);
     }
+    pub fn ellipse(&mut self, state: DrawState, width: f64, height: f64) {
+        let coords = [0.0, 0.0, width, height];
+        let shape = graphics::ellipse::Ellipse {
+            color: state.fill.unwrap_or(INVISIBLE),
+            border: state.stroke.and_then(|color| {
+                Some(graphics::ellipse::Border {
+                    color,
+                    radius: state.stroke_width
+                })
+            }),
+            resolution: state.smoothness
+        };
+        shape.draw(coords, &Default::default(), state.transform, self.gl);
+    }
 }
 
 pub struct DrawState {
     transform: graphics::math::Matrix2d,
     fill: Option<Color>,
     stroke: Option<Color>,
-    stroke_width: f64
+    stroke_width: f64,
+    smoothness: graphics::types::Resolution
 }
 
 impl DrawState {
@@ -49,7 +61,8 @@ impl DrawState {
             transform,
             fill: None,
             stroke: None,
-            stroke_width: 1.0
+            stroke_width: 1.0,
+            smoothness: 20
         }
     }
     pub fn fill(mut self, color: Color) -> Self {
